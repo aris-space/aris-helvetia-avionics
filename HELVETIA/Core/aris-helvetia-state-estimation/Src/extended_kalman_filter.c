@@ -1,4 +1,4 @@
-#include "extended_kalman_filter.h"
+#include "../Inc/extended_kalman_filter.h"
 
 // Resets state estimation
 void reset_state(ekf_state_t* ekf_state){
@@ -61,7 +61,7 @@ void update_B(float dt, ekf_state_t* ekf_state){
             B[i+3][i] = dt;
         }
     }
-    
+
     memcpy(ekf_state->B,B,sizeof(ekf_state->B));
 }
 
@@ -82,7 +82,7 @@ void update_state_est_data(state_est_meas_t* state_est_meas,ekf_state_t* ekf_sta
     state_est_data->timestamp = state_est_meas->timestamp;
     float pos[3][1] = {ekf_state->X_e[0][0],ekf_state->X_e[1][0],ekf_state->X_e[2][0]};
     float vel[3][1] = {ekf_state->X_e[3][0],ekf_state->X_e[4][0],ekf_state->X_e[5][0]};
-    
+
     memcpy(state_est_data->pos,pos,sizeof(state_est_data->pos));
     memcpy(state_est_data->vel,vel,sizeof(state_est_data->vel));
 
@@ -232,7 +232,7 @@ void prior_update(ekf_state_t* ekf_state, state_est_meas_t* z, state_est_meas_t*
     float A_transposed[NUM_STATES][NUM_STATES];
 
     transpose(NUM_STATES, NUM_STATES, *(ekf_state->A), *A_transposed);
-    matmul(NUM_STATES, NUM_STATES, NUM_STATES, *(ekf_state->A), *(ekf_state->P_e), *P_propagated1, true); 
+    matmul(NUM_STATES, NUM_STATES, NUM_STATES, *(ekf_state->A), *(ekf_state->P_e), *P_propagated1, true);
     matmul(NUM_STATES, NUM_STATES, NUM_STATES, *P_propagated1, *A_transposed, *(ekf_state->P_prior), true);
     matadd(NUM_STATES, NUM_STATES, *(ekf_state->P_e), *(ekf_state->Q), *(ekf_state->P_e));
 
@@ -243,7 +243,7 @@ void posterior_update(ekf_state_t* ekf_state, state_est_meas_t* state_est_meas,s
     // we copy the prior to the posterior as magnotometer is five times slower then other sensors
     memcpy(ekf_state->X_e, ekf_state->X_prior, sizeof(ekf_state->X_e));
     memcpy(ekf_state->P_e, ekf_state->P_prior, sizeof(ekf_state->P_e));
-    } 
+    }
     // TO DO: ADD CASESES WHERE ONLY ONE SENSOR HAS NO DATA
     /*else if (state_est_meas->mag==NULL){
 
@@ -265,7 +265,7 @@ void posterior_update(ekf_state_t* ekf_state, state_est_meas_t* state_est_meas,s
         transpose(NUM_MEASUREMENTS, NUM_STATES, ekf_state->H, H_transposed);
         matmul(NUM_MEASUREMENTS, NUM_STATES, NUM_STATES, ekf_state->H, ekf_state->P_prior, mat1, true);
         matmul(NUM_MEASUREMENTS, NUM_STATES, NUM_MEASUREMENTS, mat1, H_transposed, mat2, true);
-        matadd(NUM_MEASUREMENTS, NUM_MEASUREMENTS, mat2, ekf_state->R, mat3); 
+        matadd(NUM_MEASUREMENTS, NUM_MEASUREMENTS, mat2, ekf_state->R, mat3);
 
         float lambda = 0.; //damping factor
         bool invertible = inverse(NUM_MEASUREMENTS, mat3, inv, lambda);
