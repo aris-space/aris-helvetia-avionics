@@ -27,8 +27,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "aris-helvetia-state-estimation/Inc/main_state_est.h" //Needs to be removed after testing
+#include "aris-helvetia-state-estimation/Inc/bno055_stm32.h"
+#include "Drivers/TE_Connectivity/Inc/ms5607.h"
 /* USER CODE END Includes */
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
@@ -59,6 +62,27 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+//Flags for state estimation: TODO: remove after testing
+uint8_t uart_rx_flag = 0; //flag which enables receiving commands over UART
+uint8_t rx_data_uart = 0; //buffer to store commands received over UART
+uint8_t uart_rx_data_parse_flag = 0; //flag which enables parsing of incoming UART commands
+uint8_t uart_tx_data_enable_flag = 0;
+uint8_t run_flag = 0; //flag which enables state estimation
+uint8_t calibration_on_startup_flag = 0; // Set true to calibrate sensor
+uint8_t system_calibration = 0;
+uint8_t sensor_before_calibration_flag = 1; // If sensor is not calibrated yet
+uint8_t state_estimation_first_loop_flag = 1; // In first loop only z prev can be set
+uint8_t state_estimation_flag = 0;
+uint8_t state_estimation_calibration_flag = 0; // Flag to get a better accuracy in state estimation by bias correction
+uint8_t correction_state = 0;
+double correction_accel_x = 0;
+double correction_accel_y = 0;
+double correction_accel_z = 0;
+double correction_gyro_x = 0;
+double correction_gyro_y = 0;
+double correction_gyro_z = 0;
+
+double min_value = 0.05;
 /* USER CODE END 0 */
 
 /**
@@ -96,7 +120,30 @@ int main(void)
   MX_SPI2_Init();
   MX_ICACHE_Init();
   /* USER CODE BEGIN 2 */
+  bno055_assignI2C(&hi2c1); //don't know which i2c connection is used
+  bno055_setup();
+  ms5607_assignI2C(&hi2c3); //don't know which i2c connection is used
+  ms5607_setup();
 
+  //Test whether bno055 is working correctly
+  bno055_self_test_result_t self_test = bno055_getSelfTestResult();
+  if (self_test.gyrState == 0 || self_test.magState == 0 || self_test.accState == 0) return 0;
+  bno055_setPage(1);
+  bno055_writeData(BNO055_ACC_CONFIG, 0b00001111); //set acceleration to 16g instead of 4g by default
+  bno055_setPage(0);
+  bno055_setOperationModeNDOF();
+
+  // Initialisation of all state estimation variables need to be removed after testing
+  ekf_state_t ekf_state;
+  flight_phase_detection_t flight_phase_detection;
+  flight_phase_detection.flight_phase = IDLE; // No idea why this isn't done by default
+  state_est_meas_t z;
+  state_est_meas_t z_prev;
+  env_t env;
+  state_est_data_t state_est_data;
+
+  uint32_t t;
+  uint32_t t0 = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
