@@ -6,8 +6,8 @@
 #define NUM_STATES 10
 #define NUM_INPUTS 6
 #define STATE_ESTIMATION_FREQUENCY 100
-#define NUM_IMU 3
-#define NUM_BARO 3
+#define NUM_IMU 1
+#define NUM_BARO 1
 #define NUM_MEASUREMENTS 4
 
 #define LAUNCH_RAIL_ANGLE 90.0f // launch rail angle in degrees
