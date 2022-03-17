@@ -29,7 +29,7 @@ void ms5607_setup(){
         return MS5607_STATE_READY;
 }
 
-void MS5607PromRead(struct promData *prom){
+void ms5607_PromRead(struct promData *prom){
     uint8_t addr;
     uint16_t *structPointer;
     
@@ -52,7 +52,7 @@ void MS5607PromRead(struct promData *prom){
     }
 }
 
-void MS5607UncompensatedRead(struct MS5607UncompensatedValues *uncompValues){
+void ms5607_UncompensatedRead(struct MS5607UncompensatedValues *uncompValues){
     uint8_t reply[3];
     //ms5607_enableCSB();
     uint8_t msg = MS5607_COMMAND_CONVERT_D1_BASE | Pressure_OSR;
@@ -105,7 +105,7 @@ void MS5607UncompensatedRead(struct MS5607UncompensatedValues *uncompValues){
 
 }
 
-void MS5607Convert(struct MS5607UncompensatedValues *sample, struct MS5607Readings *value){
+void ms5607_Convert(struct MS5607UncompensatedValues *sample, struct MS5607Readings *value){
     int32_t dT;
     int32_t TEMP;
     int64_t OFF;
@@ -140,27 +140,27 @@ void MS5607Convert(struct MS5607UncompensatedValues *sample, struct MS5607Readin
 }
 
 /* Performs the sensor reading updating the data structures */
-void MS5607Update(void){
-  MS5607UncompensatedRead(&uncompValues);
-  MS5607Convert(&uncompValues, &readings);
+void ms5607_Update(void){
+  ms5607_UncompensatedRead(&uncompValues);
+  ms5607_Convert(&uncompValues, &readings);
 }
 
 /* Gets the temperature from the sensor reading */
-double MS5607GetTemperatureC(void){
+double ms5607_getTemperature(void){
   return (double)readings.temperature/(double)100.0;
 }
 
 /* Gets the pressure from the sensor reading */
-int32_t MS5607GetPressurePa(void){
+double ms5607_getPreassure(void){
   return readings.pressure;
 }
 
 /* Sets the OSR for temperature */
-void MS5607SetTemperatureOSR(MS5607OSRFactors tOSR){
-  Temperature_OSR = tOSR;
+void ms5607_setTempeatureOSR(MS5607OSRFactors *tOSR){
+  Temperature_OSR = &tOSR;
 }
 
 /* Sets the OSR for pressure */
-void MS5607SetPressureOSR(MS5607OSRFactors pOSR){
-  Pressure_OSR = pOSR;
+void ms5607_setPressureOSR(MS5607OSRFactors *pOSR){
+  Pressure_OSR = &pOSR;
 }
